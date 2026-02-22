@@ -52,8 +52,8 @@ fun GameScreen(){
 
     val secret = "cactus"
     // Si no usamos remember se reinician  o quedan estados inconsistentes entonces:
-    var impostorPosition by remember { mutableStateOf(-1) }
-    var positionClue by remember { mutableStateOf(0) }
+    var impostorPosition by remember { mutableStateOf(-1) } //Guardamos la posicion del impostor
+    var positionClue by remember { mutableStateOf(0) } // Guardamos la posicion de la pista
 
 
     when(gameState){
@@ -140,7 +140,7 @@ fun GameScreen(){
 
                     gameState = GameStateEnum.END
 
-                }) { Text("Mostrar Impostor") }
+                }) { Text("Show Impostor") }
 
                 Button(onClick = {
                     positionClue++
@@ -154,17 +154,13 @@ fun GameScreen(){
 
         }
         GameStateEnum.END -> {
-            val currentPlayer = players[positionClue]
+            val impostor = players[impostorPosition] // Creamos una variable impostor, y buscamos el jugador en la lista players y en la posicion del impostor
             Column(modifier = Modifier.fillMaxSize().padding(20.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                val isImpostor =  currentPlayer.isImpostor
 
-                if (isImpostor){
-                    Text("The impostor era: ${currentPlayer.name}")
-                }else{
-                    Text("")
-                }
+                Text("The impostor era: ${impostor.name}")
+
             }
         }
 
