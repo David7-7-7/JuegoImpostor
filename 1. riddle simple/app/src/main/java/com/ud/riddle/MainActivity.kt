@@ -1,5 +1,6 @@
 package com.ud.riddle
 
+import android.R.attr.text
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -7,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -22,11 +24,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ud.riddle.models.enums.GameStateEnum
 import com.ud.riddle.models.enums.Player
 import com.ud.riddle.ui.theme.RiddleAppTheme
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.ud.riddle.data.WordsRepository
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,55 +42,65 @@ class MainActivity : ComponentActivity() {
         setContent {
             RiddleAppTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    GameScreen()
+                    GameScreen(innerPadding)
                 }
             }
         }
     }
 }
-
 @Composable
-fun GameScreen(){
+fun GameScreen(padding: PaddingValues){
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
 
     var gameState by remember { mutableStateOf(GameStateEnum.CREATING_PLAYERS) }
     val players = remember { mutableStateListOf<Player>() }
 
-    val secret = "cactus"
-    // Si no usamos remember se reinician  o quedan estados inconsistentes entonces:
-    var impostorPosition by remember { mutableStateOf(-1) } //Guardamos la posicion del impostor
-    var positionClue by remember { mutableStateOf(0) } // Guardamos la posicion de la pista
+    val secret = WordsRepository.getRandom()
+    var impostorPosition: Int? = 0
+    var positionClue by remember { mutableStateOf(0) }
+    var currentPlayer: Player?
 
+
+    Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally) {
 
     when(gameState){
 
         GameStateEnum.CREATING_PLAYERS -> {
+                Text(text = "IMPOSTOR GAME",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold)
 
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Input a name a player")
+                Text(text="Add player to start",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium)
+
+                Spacer(Modifier.height(16.dp))
+
                 TextField(
-                    label = { Text("Label") },
+                    label = { Text("Name") },
                     value = name,
-                    onValueChange = {
-                        name = it
-                    }
+                    onValueChange = { name = it }
                 )
 
-                Button(onClick = {
+                Spacer(Modifier.height(16.dp))
+
+                StyleButton("Add"){
                     players.add(Player(name=name))
                     name = ""
-                }) { Text("Add") }
+                }
 
-                Button(onClick = {
+               Spacer(Modifier.height(16.dp))
+
+                StyleButton("Start"){
                     players.shuffle()
                     impostorPosition = players.indices.random()
                     players[impostorPosition].isImpostor = true
 
                     gameState = GameStateEnum.SHOWING_CLUE
-                }) { Text("Start") }
+                }
 
                 if (players.isNotEmpty()){
                     Text("Players:")
@@ -92,77 +109,75 @@ fun GameScreen(){
                         Text(player.name)
                     }
                 }
-
-            }
-
         }
         GameStateEnum.SHOWING_CLUE -> {
-            val currentPlayer = players[positionClue]
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Take phone ${currentPlayer.name}")
+            currentPlayer = players[positionClue]
 
-                Button(onClick = {
-                    val isImpostor =  currentPlayer.isImpostor
+                Text(text="Take phone ${currentPlayer?.name}",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold)
 
-                    if (isImpostor){
-                        Toast.makeText(context, "Eres el impostor", Toast.LENGTH_LONG).show()
+                Spacer(Modifier.height(16.dp))
+
+                StyleButton("Show Clue") {
+                    val isImpostor =  currentPlayer?.isImpostor
+
+                    if (isImpostor == true){
+                        Toast.makeText(context, "No tienes pista, eres el impostor", Toast.LENGTH_LONG).show()
                     } else {
                         Toast.makeText(context, "Pista: $secret", Toast.LENGTH_LONG).show()
                     }
-                }) { Text("Show Clue") }
+                }
 
+                Spacer(Modifier.height(16.dp))
 
-                Button(onClick = {
-                    //currentPlayer = players[positionClue] Lo quitamos porque estamos haciendo reasignacion
+                StyleButton("Next") {
+                    currentPlayer = players[positionClue]
                     positionClue++
 
                     if (positionClue == players.size){
                         positionClue = 0
                         gameState = GameStateEnum.IN_TURNS
                     }
-
-                }) { Text("Next") }
-
-            }
-
+                }
         }
         GameStateEnum.IN_TURNS -> {
-            val currentPlayer = players[positionClue]
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally) {
+            currentPlayer = players[positionClue]
 
-                Text("Turn of: ${currentPlayer.name}")
+                Text(text="Vota: ${currentPlayer?.name}",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold)
 
-                Button(onClick = {
+                Spacer(Modifier.height(16.dp))
 
-                    gameState = GameStateEnum.END
-
-                }) { Text("Show Impostor") }
-
-                Button(onClick = {
+                StyleButton("Next") {
+                    currentPlayer = players[positionClue]
                     positionClue++
 
-                    if (positionClue == players.size){
-                        positionClue = 0
+                    if (positionClue == players.size) {
+                        gameState = GameStateEnum.END
                     }
-
-                }) { Text("Next") }
-            }
-
+                }
         }
         GameStateEnum.END -> {
-            val impostor = players[impostorPosition] // Creamos una variable impostor, y buscamos el jugador en la lista players y en la posicion del impostor
-            Column(modifier = Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally) {
+                StyleButton("Show impostor") {
+                    val nameImpostor = impostorPosition?.let { players[it] }?.name
+                    Toast.makeText(context, "Impostor $nameImpostor", Toast.LENGTH_LONG).show()
 
-                Text("The impostor era: ${impostor.name}")
-
+                }
             }
         }
+    }
+}
 
+@Composable
+fun StyleButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(55.dp)
+    ) {
+        Text(text)
     }
 }
