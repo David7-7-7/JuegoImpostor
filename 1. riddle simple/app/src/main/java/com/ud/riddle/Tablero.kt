@@ -43,17 +43,17 @@ fun TableroNumerico(viewModel: PuzzleViewModel = viewModel()) { //Creamos viewMo
                 onClick = { viewModel.inicializar() },
                 modifier = Modifier.fillMaxWidth().height(55.dp)
             ) {
-                Text("Reset")
+                Text("REINICIAR")
             }
 
             Spacer(Modifier.height(20.dp))
-            Text("Moves: $moves")
-            Text("Minimum moves: $movimientosMinimos")
+            Text("Movimientos: $moves")
+            Text("Movimientos Minimos: $movimientosMinimos")
             Spacer(Modifier.height(40.dp))
 
             if (gane) { // Si es verdadero entonces corremos la funcion Inicializar y mandamos los movimientos
                 Ganaste(
-                    moves, // mostramos los movimientos del jugador
+                    moves,
                     resultado = resultado, //Mostramos el resutlado de los movimientos - mov minimos
                     onReset = { viewModel.inicializar() } // Llamamos la funcion Inicializar
                 )
@@ -68,10 +68,10 @@ fun TableroNumerico(viewModel: PuzzleViewModel = viewModel()) { //Creamos viewMo
 
                             val position = i * 3 + j // Posicion del numero en la fila
                             val valorNum = numeros[position] // Guardamos el valor del numero en esa posicion
+
                             val borde = when {
-                                // Si la celda esta seleccionada ponemos color rojo
                                 seleccion == position ->
-                                    BorderStroke(3.dp, Color.Red)
+                                    BorderStroke(3.dp, Color.Red)// Si la celda esta seleccionada ponemos color rojo
                                 else ->
                                     BorderStroke(1.dp, Color.Green)
                             }
@@ -85,7 +85,7 @@ fun TableroNumerico(viewModel: PuzzleViewModel = viewModel()) { //Creamos viewMo
                                 modifier = Modifier.size(80.dp).padding(bottom = 8.dp)
                             ) {
                                 Text(
-                                    text = valorNum, //Mostamos el numero
+                                    text = valorNum,
                                     fontSize = 20.sp
                                 )
                             }
